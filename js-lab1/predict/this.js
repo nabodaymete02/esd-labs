@@ -12,24 +12,29 @@ const planner = {
 // ---- 1. Called on the object --------------------------------------------
 console.log("1:", planner.hello());
 // Prediction:
+// hello from Asha
 
 // ---- 2. Detached, then called -------------------------------------------
 const detached = planner.hello;
 console.log("2:", detached());
 // Prediction:
+// hello from undefined
 
 // ---- 3. bind fixes it permanently ---------------------------------------
 const bound = planner.hello.bind(planner);
 console.log("3:", bound());
 // Prediction:
+// hello from Asha
 
 // ---- 4. call / apply set it for one call --------------------------------
 console.log("4:", planner.hello.call({ owner: "Ravi" }));
 // Prediction:
+// hello from Ravi
 
 // ---- 5. An arrow function has no `this` of its own ----------------------
 console.log("5:", planner.arrowHello());
 // Prediction:
+// arrow sees undefined
 
 // ---- 6. new creates a fresh object for `this` ---------------------------
 function Student(name) {
@@ -38,8 +43,10 @@ function Student(name) {
 const s = new Student("Meera");
 console.log("6:", s.name);
 // Prediction:
+// Meera
 
 // ---- 7. The callback trap -----------------------------------------------
 const owners = ["x", "y"];
 console.log("7:", owners.map(planner.hello));
 // Prediction:
+//  ["hello from x", "hello from y"]
