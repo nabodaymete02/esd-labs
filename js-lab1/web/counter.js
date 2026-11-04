@@ -9,6 +9,7 @@ const dec = document.querySelector("#dec");
 const reset = document.querySelector("#reset");
 const stepInput = document.querySelector("#step");
 
+/*
 // Stage 1 — one number, one button, one line that updates the page.
 let count = 0;
 
@@ -70,6 +71,7 @@ reset.addEventListener("click", () => {
 });
 
 render();
+*/
 
 // Stage 4 — TODO: write useState in src/s15-state.js, import it, and
 //   replace `let count` with  const [getCount, setCount] = useState(0, render);
