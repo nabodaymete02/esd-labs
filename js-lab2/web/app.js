@@ -134,14 +134,46 @@ function renderSgpa(state) {
 // ---------------------------------------------------------------------------
 // TODO: const [getState, setState] = useState(initialState, render);
 // TODO: const dispatch = (event) => …   (hint: setState with an updater that calls transition)
+const [getState, setState] = useState(initialState, render);
+// Every change goes through here: the updater hands the CURRENT state to
+// transition(), and setState skips the render if transition returned the SAME state.
+const dispatch = (event) => setState((state) => transition(state, event));
 
 // ---------------------------------------------------------------------------
 // Step 2 (sections 07 and 08) — render(): draw the state.
 // First make it call all five region functions every time. Then (section 08)
 // make it redraw a region only when the part of the state it shows has changed.
 // ---------------------------------------------------------------------------
+let prev = {};
+
 function render() {
-  // TODO
+  const state = getState();
+
+  if (!Object.is(prev.departments, state.departments) || !Object.is(prev.department, state.department)) {
+    renderDepartments(state);
+  }
+
+  if (
+    !Object.is(prev.status, state.status) ||
+    !Object.is(prev.error, state.error) ||
+    !Object.is(prev.courses, state.courses)
+  ) {
+    renderStatus(state);
+  }
+
+  if (!Object.is(prev.courses, state.courses) || !Object.is(prev.planner, state.planner)) {
+    renderCourses(state);
+  }
+
+  if (!Object.is(prev.planner, state.planner)) {
+    renderPlanner(state);
+  }
+
+  if (!Object.is(prev.planner, state.planner) || !Object.is(prev.grades, state.grades)) {
+    renderSgpa(state);
+  }
+
+  prev = state;
 }
 
 // ---------------------------------------------------------------------------
@@ -149,8 +181,22 @@ function render() {
 // LOAD_START before; LOAD_OK or LOAD_FAIL after. Use fetchCourses(filters, fetchWithNetwork).
 // Section 09: keep only the LATEST response, with createLatestOnly().
 // ---------------------------------------------------------------------------
+const track = createLatestOnly();
 async function load() {
-  // TODO
+  const { department, query } = getState();
+  dispatch({ type: "LOAD_START" });
+
+  try {
+    const result = await track(fetchCourses({ department, q: query }, fetchWithNetwork));
+
+    // A newer load started while this one was in flight: ignore this response.
+    if (result.stale) return;
+
+    dispatch({ type: "LOAD_OK", courses: result.value });
+  } catch (error) {
+    // Only the latest call's error gets here (track swallows stale ones).
+    dispatch({ type: "LOAD_FAIL", message: error.message });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -158,15 +204,64 @@ async function load() {
 // Use ONE listener per region and find the button/select that was hit
 // (event delegation, JS Lab 1 section 13).
 // ---------------------------------------------------------------------------
+// Typing "learn" fast should search once, not five times (stretch).
+const debouncedLoad = debounce(load, 250);
 // TODO: search box "input"      → SET_QUERY, then load()
+// Search box: update the query right away, load after the typing pauses.
+els.search.addEventListener("input", (event) => {
+  dispatch({ type: "SET_QUERY", query: event.target.value });
+  debouncedLoad();
+});
 // TODO: department buttons       → SET_DEPARTMENT, then load()
+// Department buttons: SET_DEPARTMENT, then load.
+els.departments.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-department]");
+  if (!button) return;
+  dispatch({ type: "SET_DEPARTMENT", department: button.dataset.department });
+  load();
+});
 // TODO: course card buttons      → ADD (with the course object) or REMOVE (with the id)
-// TODO: grade selects "change"   → SET_GRADE
-// TODO: planner ✕ buttons        → REMOVE
-// TODO: the form's "submit"      → preventDefault (Enter in a field must not reload the page)
-// TODO: "Try again" button       → load()
+// Course card buttons: ADD (with the course object) or REMOVE (with the id).
+els.courses.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-id]");
+  if (!button || button.disabled) return;
 
+  const id = Number(button.dataset.id);
+
+  if (button.dataset.inPlanner === "true") {
+    dispatch({ type: "REMOVE", id });
+  } else {
+    const course = getState().courses.find((c) => c.id === id);
+    if (course) dispatch({ type: "ADD", course });
+  }
+});
+// TODO: grade selects "change"   → SET_GRADE
+// Grade selects: SET_GRADE.
+els.planned.addEventListener("change", (event) => {
+  const select = event.target.closest("select[data-id]");
+  if (!select) return;
+  dispatch({ type: "SET_GRADE", id: Number(select.dataset.id), grade: select.value });
+});
+// TODO: planner ✕ buttons        → REMOVE
+// Planner ✕ buttons: REMOVE.
+els.planned.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-remove]");
+  if (!button) return;
+  dispatch({ type: "REMOVE", id: Number(button.dataset.remove) });
+});
+// TODO: the form's "submit"      → preventDefault (Enter in a field must not reload the page)
+// The form's submit: Enter in a field must not reload the page.
+els.sgpaForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+});
+// TODO: "Try again" button       → load()
+// "Try again" button.
+els.retry.addEventListener("click", () => {
+  load();
+});
 // ---------------------------------------------------------------------------
 // Start: draw once, then load.
 // ---------------------------------------------------------------------------
 // TODO: render(); load();
+render();
+load();
