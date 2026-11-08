@@ -9,12 +9,49 @@
 // If the promise rejects: rethrow the error if it's the latest call,
 // otherwise resolve { stale: true } (nobody cares about an old failure).
 export function createLatestOnly() {
-  throw new Error("TODO");
+  let latestCall = 0;
+
+  return async function track(promise) {
+    // Assign a unique ID to this request.
+    const currentCall = ++latestCall;
+
+    try {
+      const value = await promise;
+
+      // Check whether a newer request has started.
+      if (currentCall !== latestCall) {
+        return { stale: true };
+      }
+
+      return {
+        stale: false,
+        value
+      };
+
+    } catch (error) {
+
+      // Ignore errors from older requests.
+      if (currentCall !== latestCall) {
+        return { stale: true };
+      }
+
+      // Propagate the latest request's error.
+      throw error;
+    }
+  };
 }
 
 // STRETCH — debounce(fn, ms): returns a function that waits until it has NOT
 // been called for `ms` milliseconds, then calls fn once, with the LAST arguments.
 // Typing "learn" fast should search once, for "learn" — not five times.
 export function debounce(fn, ms) {
-  throw new Error("TODO");
+  let timer;
+
+  return function (...args) {
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, ms);
+  };
 }
