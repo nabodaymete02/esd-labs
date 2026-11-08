@@ -75,17 +75,32 @@ export function transition(state, event) {
     }
     case "ADD": {
       // add { id, code, title, credits } of event.course to the planner —
-      // the SAME state if it's already there.
-      // Stretch: also refuse a full course, or one that would go over 24 credits.
-      const alreadyExists = state.planner.some(
-        course => course.id === event.course.id
-      );
+      // the SAME state if it's already there, if the course is full,
+      // or if it would push the planner over 24 credits.
+      const course = event.course;
 
-      if (alreadyExists) {
+      // Already planned → no change.
+      if (state.planner.some(c => c.id === course.id)) {
         return state;
       }
 
-      const course = event.course;
+      // Full course → refuse.
+      if (
+        course.full === true ||
+        (typeof course.seatsLeft === "number" && course.seatsLeft <= 0) ||
+        (typeof course.seats === "number" && course.seats <= 0) ||
+        (typeof course.enrolled === "number" &&
+          typeof course.capacity === "number" &&
+          course.enrolled >= course.capacity)
+      ) {
+        return state;
+      }
+
+      // Would go over 24 credits → refuse.
+      const totalCredits = state.planner.reduce((sum, c) => sum + c.credits, 0);
+      if (totalCredits + course.credits > 24) {
+        return state;
+      }
 
       // Keep only the required properties.
       const newCourse = {
