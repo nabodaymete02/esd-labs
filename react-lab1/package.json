@@ -4,7 +4,9 @@
   "private": true,
   "description": "ESD 2026 — React Lab 1: a number matrix, by hand. Pre-lab exercises, checked by Vitest.",
   "type": "module",
-  "engines": { "node": ">=20.19" },
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -26,6 +28,6 @@
     "@vitejs/plugin-react": "5.2.0",
     "jsdom": "26.1.0",
     "vite": "7.3.7",
-    "vitest": "3.2.7"
+    "vitest": "^5.1.0"
   }
 }
