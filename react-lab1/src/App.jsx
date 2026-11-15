@@ -13,9 +13,40 @@ export default function App() {
   //             Pass it down to Matrix as onIncrement.
   // Section 09: render <Stats matrix={…} /> NEXT TO the matrix, not inside it.
   // Section 11: load /matrix.json once, in a useEffect, and put it in the state.
+  const [matrix, setMatrix] = useState(START);
+  const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    fetch("/matrix.json")
+      .then((response) => response.json())
+      .then(setMatrix);
+  }, []);
+
+  function increment(row, col) {
+    setMatrix((m) => incrementAt(m, row, col, step));
+  }
+
+  function decrement(row, col) {
+    setMatrix((m) => decrementAt(m, row, col));
+  }
+
+  function reset() {
+    setMatrix((m) => zeros(m));
+  }
   return (
     <main className="app">
       <Header />
+      <label>
+        Step{" "}
+        <input
+          type="number"
+          value={step}
+          onChange={(event) => setStep(Number(event.target.value))}
+        />
+      </label>
+      <button onClick={reset}>Reset</button>
+      <Matrix matrix={matrix} onIncrement={increment} onDecrement={decrement} />
+      <Stats matrix={matrix} />
     </main>
   );
 }
