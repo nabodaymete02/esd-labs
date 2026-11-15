@@ -12,7 +12,33 @@
 // Lists need a key on the element you return from map — section 06 says which.
 // Section 08: each Cell's onClick calls onIncrement with THAT cell's row and column.
 import Cell from "./Cell.jsx";
+import { stats } from "./matrix.js";
 
-export default function Matrix({ matrix, onIncrement }) {
-  throw new Error("TODO");
+export default function Matrix({ matrix, onIncrement, onDecrement }) {
+  const { max } = stats(matrix);
+  return (
+    <table className="matrix">
+      <tbody>
+        {matrix.map((rowValues, r) => (
+          <tr key={r}>
+            {rowValues.map((value, c) => (
+              <td key={c}>
+                <Cell
+                  row={r}
+                  col={c}
+                  value={value}
+                  isMax={max > 0 && value === max}
+                  onClick={() => onIncrement(r, c)}
+                  onDecrement={onDecrement}
+                />
+              </td>
+            ))}
+            <td className="total" aria-label={`Row ${r + 1} total`}>
+              {rowValues.reduce((a, b) => a + b, 0)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }
