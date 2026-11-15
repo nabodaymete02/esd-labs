@@ -9,8 +9,6 @@
 // Then use it in CourseSearch:  useCourseSearch(useDebounced(query, 250))
 import { useEffect, useState } from "react";
 
-import { useEffect, useState } from "react";
-
 export function useDebounced(value, ms) {
   const [settled, setSettled] = useState(value);
 
